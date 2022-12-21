@@ -23,5 +23,9 @@
       "DOM"
     ],
     "declaration": true
-  }
+  },
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ]
 }
