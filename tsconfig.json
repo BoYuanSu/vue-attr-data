@@ -15,7 +15,6 @@
     "strict": true,
     "skipLibCheck": true,
     "allowJs": false,
-    "checkJs": true,
     "outDir": "dist/",
     "noEmitOnError": true,
     "lib": [
@@ -23,6 +22,6 @@
       "es2016",
       "DOM"
     ],
-    "declaration": true,
-  },
+    "declaration": true
+  }
 }
