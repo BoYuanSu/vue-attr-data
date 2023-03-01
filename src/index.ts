@@ -1,39 +1,50 @@
-import type { App, Plugin, Directive, DirectiveBinding, Ref } from 'vue'
+import type { App, Plugin, DirectiveBinding, Ref, FunctionDirective } from 'vue'
 import { unref } from 'vue'
-type _MODE = 'production' | 'development'
 
-type vGtmOptions = {
-  MODE: _MODE
+export type vDataOptions = {
+  enable?: boolean,
+  prefix?: string
 }
 
-let _mode: _MODE = 'development'
+let _enable = true
+let _prefix = 'data'
 
-type BasicBinding = { [key: string]: string | number } | string | number
+type BasicBinding = { [key: string]: string | number | Ref<string | number> } | string | number | Ref<string | number>
+
 type BindingType = DirectiveBinding<BasicBinding | Ref<BasicBinding>>
 
-const vGtm: Directive = (el: HTMLElement, binding: BindingType) => {
-  if (_mode === 'production') return
-  const binding_ = unref(binding.value)
-  if (typeof binding_ === 'string') {
-    el.setAttribute('gtm', binding_)
-  } else if (typeof binding_ === 'number') {
-    el.setAttribute('gtm', binding_.toString())
-  } else if (typeof binding.value === 'object') {
-    Object.keys(binding.value).forEach(value => {
-      const data = binding_[value]
-      el.setAttribute(`gtm-${value}`, data.toString())
-    })
+const useAttrData = (options: vDataOptions = { enable: _enable, prefix: _prefix }) :FunctionDirective<HTMLElement, BindingType> => {
+  const { enable = _enable, prefix = _prefix } = options
+
+  return (el, binding) => {
+    if (!enable) return
+
+    const prefixKey = binding.arg || prefix || _prefix
+    const bindingValue = unref(binding.value)
+    if (typeof bindingValue === 'string') {
+      el.setAttribute(prefixKey, bindingValue)
+    } else if (typeof bindingValue === 'number') {
+      el.setAttribute(prefixKey, bindingValue)
+    } else if (typeof bindingValue === 'object') {
+      Object.keys(bindingValue).forEach(value => {
+        const data = unref(bindingValue[value as keyof BasicBinding])
+        el.setAttribute(`${prefixKey}-${value}`, data)
+      })
+    }
   }
 }
 
+const vAttrData = useAttrData()
+
 export {
-  vGtmOptions,
-  vGtm,
+  useAttrData,
+  vAttrData,
 }
 
 export default {
-  install: (app: App, options: vGtmOptions) => {
-    _mode = options?.MODE || 'production'
-    app.directive('gtm', vGtm)
+  install: (app: App, options: vDataOptions = {}) => {
+    _enable = options.enable || _enable
+    _prefix = options.prefix || _prefix
+    app.directive('attr-data', vAttrData)
   },
 } as Plugin
